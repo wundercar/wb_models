@@ -1,0 +1,53 @@
+#FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
+FROM nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04
+# better try => FROM pytorch/pytorch:1.7.0-cuda11.0-cudnn8-runtime
+
+MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
+
+# Install necessary dependencies for MMS and SageMaker Inference Toolkit
+RUN apt-get update
+RUN apt-get -y install --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    openjdk-8-jdk-headless \
+    curl \
+    vim \
+    mpich \
+    nginx \
+    wget \
+    bzip2 \
+    libxext6 \
+    libsm6 \
+    python3-dev \
+    libkrb5-dev \
+    libxrender1
+
+#    gcc \
+
+# installing git in the previous command (with other packages) fails.
+RUN apt-get -y install git libgl1-mesa-glx libglib2.0-0
+RUN rm -rf /var/lib/apt/lists/*
+
+# Installing & configuring miniconda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
+    rm ~/miniconda.sh && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
+
+RUN apt-get install -y curl grep sed dpkg && \
+    TINI_VERSION=`curl https://github.com/krallin/tini/releases/latest | grep -o "/v.*\"" | sed 's:^..\(.*\).$:\1:'` && \
+    curl -L "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini_${TINI_VERSION}.deb" > tini.deb && \
+    dpkg -i tini.deb && \
+    rm tini.deb && \
+    apt-get clean
+
+COPY base.yaml .
+COPY requirements.txt .
+
+RUN /opt/conda/bin/conda env update --file base.yaml --prune
+RUN /opt/conda/bin/pip install -r requirements.txt
+RUN /opt/conda/bin/conda install mpi4py
+
+# RUN /opt/conda/bin/conda update -n base -c defaults conda

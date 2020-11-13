@@ -49,7 +49,12 @@ def ping():
     gpu_availability = torch.cuda.is_available()
     device_name = 'not_available'
     if gpu_availability:
-        torch.cuda.get_device_name('cuda')
+        device_name = torch.cuda.get_device_name('cuda')
+
+    gpu_info = {
+        'gpu_availability': gpu_availability,
+        'gpu_device': device_name,
+    }
 
     try:
         try:
@@ -61,25 +66,23 @@ def ping():
         except Exception as e:
             err = {
                 'error': 'boto3',
-                'message': str(e)
+                'message': str(e),
             }
+            err = err.update(gpu_info)
             return Response(response=json.dumps(err), status=500, mimetype='application/json')
-        # _ = service.predict_ping(TEST_IMG_PATH)
 
-        success_result = {
-            'status': 'OK',
-            'gpu_availability': gpu_availability,
-            'gpu_device': device_name,
-        }
+        _ = service.predict_ping(TEST_IMG_PATH)
+
+        success_result = {'status': 'OK'}
+        success_result = success_result.update(gpu_info)
         return Response(response=json.dumps(success_result), status=200, mimetype='application/json')
     except Exception as e:
-        value = {
+        error = {
             'status': 'error',
             'message': str(e),
-            'gpu_availability': gpu_availability,
-            'gpu_device': device_name,
         }
-        return Response(response=json.dumps(value), status=500, mimetype='application/json')
+        error = error.update(gpu_info)
+        return Response(response=json.dumps(error), status=500, mimetype='application/json')
 
 
 @app.route('/invocations', methods=['POST'])

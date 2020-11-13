@@ -46,6 +46,11 @@ def ping():
     Determine if the container is healthy by running a sample through the algorithm.
     """
     # we will return status ok if the model can load the model and run predictions.
+    gpu_availability = torch.cuda.is_available()
+    device_name = 'not_available'
+    if gpu_availability:
+        torch.cuda.get_device_name('cuda')
+
     try:
         try:
             import boto3
@@ -56,17 +61,23 @@ def ping():
         except Exception as e:
             err = {
                 'error': 'boto3',
-                'gpu_availability': torch.cuda.is_available(),
-                'gpu_device': torch.cuda.get_device_name('cuda') if torch.cuda.is_available() else 'not_available',
                 'message': str(e)
             }
             return Response(response=json.dumps(err), status=500, mimetype='application/json')
-        _ = service.predict_ping(TEST_IMG_PATH)
-        return Response(response='{"status": "ok"}', status=200, mimetype='application/json')
+        # _ = service.predict_ping(TEST_IMG_PATH)
+
+        success_result = {
+            'status': 'OK',
+            'gpu_availability': gpu_availability,
+            'gpu_device': device_name,
+        }
+        return Response(response=json.dumps(success_result), status=200, mimetype='application/json')
     except Exception as e:
         value = {
             'status': 'error',
-            'message': str(e)
+            'message': str(e),
+            'gpu_availability': gpu_availability,
+            'gpu_device': device_name,
         }
         return Response(response=json.dumps(value), status=500, mimetype='application/json')
 

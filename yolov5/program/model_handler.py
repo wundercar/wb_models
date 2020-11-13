@@ -34,7 +34,14 @@ class ModelHandler:
         self.saved_model_path = saved_model_path
         self.preferred_device = preferred_device
         self._model = None
-        self.device = select_device(self.preferred_device, batch_size=self.batch_size)
+        self._device = None  # select_device(self.preferred_device, batch_size=self.batch_size)
+
+    @property
+    def device(self):
+        if self._device is None:
+            self._device = select_device(self.preferred_device, batch_size=self.batch_size)
+
+        return self._device
 
     @property
     def model(self):

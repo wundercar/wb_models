@@ -1,4 +1,5 @@
 import json
+import torch
 import os
 
 import flask
@@ -55,6 +56,8 @@ def ping():
         except Exception as e:
             err = {
                 'error': 'boto3',
+                'gpu_availability': torch.cuda.is_available(),
+                'gpu_device': torch.cuda.get_device_name('cuda') if torch.cuda.is_available() else 'not_available',
                 'message': str(e)
             }
             return Response(response=json.dumps(err), status=500, mimetype='application/json')

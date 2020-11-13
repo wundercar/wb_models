@@ -68,20 +68,20 @@ def ping():
                 'error': 'boto3',
                 'message': str(e),
             }
-            err = err.update(gpu_info)
+            err.update(gpu_info)
             return Response(response=json.dumps(err), status=500, mimetype='application/json')
 
         _ = service.predict_ping(TEST_IMG_PATH)
 
         success_result = {'status': 'OK'}
-        success_result = success_result.update(gpu_info)
+        success_result.update(gpu_info)
         return Response(response=json.dumps(success_result), status=200, mimetype='application/json')
     except Exception as e:
         error = {
             'status': 'error',
             'message': str(e),
         }
-        error = error.update(gpu_info)
+        error.update(gpu_info)
         return Response(response=json.dumps(error), status=500, mimetype='application/json')
 
 

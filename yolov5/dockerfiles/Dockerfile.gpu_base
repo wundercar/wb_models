@@ -1,8 +1,7 @@
-#FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
 FROM nvidia/cuda:11.0-cudnn8-runtime-ubuntu18.04
-# better try => FROM pytorch/pytorch:1.7.0-cuda11.0-cudnn8-runtime
+# TODO try pytorch/pytorch:1.7.0-cuda11.0-cudnn8-runtime
 
-MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
+MAINTAINER Aymen Ben Othmen <aymenbenothmenabo@gmail.com>
 
 # Install necessary dependencies for MMS and SageMaker Inference Toolkit
 RUN apt-get update
@@ -21,8 +20,6 @@ RUN apt-get -y install --no-install-recommends \
     python3-dev \
     libkrb5-dev \
     libxrender1
-
-#    gcc \
 
 # installing git in the previous command (with other packages) fails.
 RUN apt-get -y install git libgl1-mesa-glx libglib2.0-0
@@ -49,5 +46,3 @@ COPY requirements.txt .
 RUN /opt/conda/bin/conda env update --file base.yaml --prune
 RUN /opt/conda/bin/pip install -r requirements.txt
 RUN /opt/conda/bin/conda install mpi4py
-
-# RUN /opt/conda/bin/conda update -n base -c defaults conda

@@ -4,6 +4,7 @@ import torch
 from typing import List, Dict
 from PIL import Image
 from enum import Enum
+from time import sleep
 
 from utils.torch_utils import select_device
 from models.experimental import attempt_load
@@ -39,7 +40,7 @@ class ModelHandler:
     @property
     def device(self):
         if self._device is None:
-            self._device = select_device(self.preferred_device, batch_size=self.batch_size)
+            self._device = self.get_device_if_ready()
 
         return self._device
 
@@ -50,6 +51,17 @@ class ModelHandler:
             self._model = self._model.autoshape()
 
         return self._model
+
+    def get_device_if_ready(self, time_step: int = 1, timeout: int = 30):
+        waiting_time = 0
+        while waiting_time < timeout:
+            if torch.cuda.is_available():
+                break
+            else:
+                waiting_time += time_step
+                sleep(time_step)
+
+        return select_device(self.preferred_device, batch_size=self.batch_size)
 
     def predict(self, batch: list):
         """
@@ -64,6 +76,7 @@ class ModelHandler:
         for batch in dataloader.image_generator(images_paths, self.batch_size):
             output = self.predict(batch)
             result += output
+            # result += output.cpu()
 
         return result
 

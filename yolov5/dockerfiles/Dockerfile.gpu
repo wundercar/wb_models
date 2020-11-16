@@ -7,8 +7,6 @@ MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
 # Set a docker label to enable container to use SAGEMAKER_BIND_TO_PORT environment variable if present
 LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
 
-RUN /opt/conda/bin/pip install gunicorn==20.0.4
-
 COPY images/00001.jpg /opt/images/00001.jpg
 COPY aws/ /root/.aws
 

@@ -52,6 +52,19 @@ class ModelHandler:
 
         return self._model
 
+    @staticmethod
+    def post_process(images_paths: List[str], predictions: list, output_format: OutputFormat):
+        img_pred_dict = dict(zip(images_paths, predictions))
+        if output_format == OutputFormat.JSON:
+            return json.dumps(img_pred_dict), 'application/json'
+        elif output_format == OutputFormat.TEXT:
+            text = ''
+            for image, predictions in img_pred_dict.items():
+                text += '{},{}\n'.format(image, str(predictions))
+            return text[:-2], 'text/plain'
+        else:
+            return None, None
+
     def get_device_if_ready(self, time_step: int = 1, timeout: int = 30):
         waiting_time = 0
         while waiting_time < timeout:
@@ -75,8 +88,7 @@ class ModelHandler:
         result = []
         for batch in dataloader.image_generator(images_paths, self.batch_size):
             output = self.predict(batch)
-            result += output
-            # result += output.cpu()
+            result += [self.to_list_unless_none(t) for t in output]
 
         return result
 
@@ -110,6 +122,7 @@ class ModelHandler:
         """
         batch = [Image.open(image_path)]
         output = self.predict(batch)
+        output = [self.to_list_unless_none(t) for t in output]
 
         return self.post_process([image_path], output, OutputFormat.JSON)
 
@@ -117,21 +130,11 @@ class ModelHandler:
         if tensor is None:
             return []
 
-        if self.preferred_device == 'cpu':
-            object_list = tensor.numpy()
-        else:
-            object_list = tensor.cpu().numpy()
+        object_list = self.tensor_to_numpy(tensor)
         return [as_list_float(obj) for obj in object_list]
 
-    def post_process(self, images_paths: List[str], predictions: List[torch.Tensor], output_format: OutputFormat):
-        pred_list = [self.to_list_unless_none(t) for t in predictions]
-        img_pred_dict = dict(zip(images_paths, pred_list))
-        if output_format == OutputFormat.JSON:
-            return json.dumps(img_pred_dict), 'application/json'
-        elif output_format == OutputFormat.TEXT:
-            text = ''
-            for image, predictions in img_pred_dict.items():
-                text += '{},{}\n'.format(image, str(predictions))
-            return text[:-2], 'text/plain'
+    def tensor_to_numpy(self, tensor: torch.Tensor):
+        if self.preferred_device == 'cpu':
+            return tensor.numpy()
         else:
-            return None, None
+            return tensor.cpu().numpy()

@@ -23,14 +23,13 @@ ENV PATH="/opt/program:/opt/conda/bin:${PATH}"
 
 RUN chmod 755 /opt/program
 WORKDIR /opt/program
-RUN chmod +x serve
 
 # Uncomment next lines to be able to run docker locally.
 # On AWS, SageMaker will do the next steps automatically: get model artifacts from s3 and uncompress them.
-COPY ml/model.tar.gz .
-RUN mkdir -p /opt/ml/model
-RUN tar -zxvf model.tar.gz -C /opt/ml/model
-RUN rm model.tar.gz
+#COPY ml/model.tar.gz .
+#RUN mkdir -p /opt/ml/model
+#RUN tar -zxvf model.tar.gz -C /opt/ml/model
+#RUN rm model.tar.gz
 
 ENTRYPOINT ["python", "serve.py"]
 CMD ["serve"]

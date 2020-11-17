@@ -89,6 +89,7 @@ class ModelHandler:
         for batch in dataloader.image_generator(images_paths, self.batch_size):
             output = self.predict(batch)
             result += [self.to_list_unless_none(t) for t in output]
+            torch.cuda.empty_cache()
 
         return result
 

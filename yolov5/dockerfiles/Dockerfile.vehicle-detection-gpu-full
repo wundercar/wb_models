@@ -1,0 +1,29 @@
+FROM pytorch/pytorch:1.7.0-cuda11.0-cudnn8-runtime
+
+RUN apt-get update
+RUN apt-get install -y nginx git vim libgl1-mesa-glx libglib2.0-0
+
+RUN /opt/conda/bin/pip install opencv-python matplotlib scipy flask boto3
+RUN /opt/conda/bin/conda install gevent gunicorn
+
+COPY images/00001.jpg /opt/images/00001.jpg
+COPY aws/ /root/.aws
+
+RUN git clone https://github.com/ultralytics/yolov5.git
+RUN mv yolov5/ /opt/program
+
+RUN rm -rf /root/.cache
+
+COPY program/ /opt/program
+
+# Uncomment next lines to be able to run docker locally.
+# On AWS, SageMaker will do the next steps automatically: get model artifacts from s3 and uncompress them.
+COPY ml/model.tar.gz .
+RUN mkdir -p /opt/ml/model
+RUN tar -zxvf model.tar.gz -C /opt/ml/model
+RUN rm model.tar.gz
+
+WORKDIR /opt/program
+
+ENTRYPOINT ["python", "serve.py"]
+CMD ["serve"]

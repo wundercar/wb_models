@@ -68,23 +68,26 @@ class DataLoader:
         self.remove_tmp_dir(local_dir)
 
 # testing
-# todo: write a new file: new_data_loader.py and put the class code in it
-# $ python
 
 import torch
-from new_data_loader import DataLoader
+torch.cuda.is_available()
+
+from data_loader import DataLoader
 from torchvision import transforms
 from utils.torch_utils import select_device
+from models.experimental import attempt_load
+from PIL import Image
 
 bucket = 'wb-inference-data'
-img_paths = ["vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000001.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000002.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000003.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000004.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000005.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000006.jpg"]
+imgs = [Image.open('/opt/images/00001.jpg')]
+img_paths = ['vehicle-detection/ping-test-images/image_01.jpg', 'vehicle-detection/ping-test-images/image_02.jpg']
+img_paths = ["vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000001.jpg","vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000002.jpg"]
+# img_paths = ["vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000001.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000002.jpg",  "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000003.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000004.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000005.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000006.jpg"]
 
 trans = transforms.ToTensor()
 device = select_device('cuda:0', 4)
 
-loader = DataLoader(bucket, trans, device)
-for batch in loader.image_generator(img_paths):
-    t = batch[0]
-    break
+loader = DataLoader(bucket, trans)
+batch = next(loader.image_generator(img_paths))
 
-t.device
+model = attempt_load('/opt/ml/model/vehicle_detection.pt', map_location=device).autoshape()

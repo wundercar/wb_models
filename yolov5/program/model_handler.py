@@ -1,6 +1,7 @@
 import os
 import json
 import torch
+from torchvision import transforms
 from typing import List, Dict
 from PIL import Image
 from enum import Enum
@@ -34,6 +35,7 @@ class ModelHandler:
         self.batch_size = batch_size
         self.saved_model_path = saved_model_path
         self.preferred_device = preferred_device
+        self._transforms = None
         self._model = None
         self._device = None  # select_device(self.preferred_device, batch_size=self.batch_size)
 
@@ -51,6 +53,13 @@ class ModelHandler:
             self._model = self._model.autoshape()
 
         return self._model
+
+    @property
+    def transforms(self):
+        if self._transforms is None:
+            self._transforms = transforms.ToTensor()
+
+        return self._transforms
 
     @staticmethod
     def post_process(images_paths: List[str], predictions: list, output_format: OutputFormat):
@@ -98,7 +107,7 @@ class ModelHandler:
         abs_image_paths = []
         for bucket, images in dictionary.items():
             abs_image_paths += abs_s3_images_paths(bucket, images)
-            results += self.prediction_iterator(DataLoader(bucket), images)
+            results += self.prediction_iterator(DataLoader(bucket, self.transforms), images)
 
         return self.post_process(abs_image_paths, results, OutputFormat.TEXT)
 
@@ -109,7 +118,7 @@ class ModelHandler:
         :param images_paths:
         :return:
         """
-        dataloader = DataLoader(bucket)
+        dataloader = DataLoader(bucket, self.transforms)
         result = self.prediction_iterator(dataloader, images_paths)
         abs_image_paths = abs_s3_images_paths(bucket, images_paths)
 

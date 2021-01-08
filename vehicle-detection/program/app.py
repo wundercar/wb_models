@@ -1,22 +1,22 @@
 import json
-import torch
 import os
 
 import flask
 from flask import Flask, Response
+
 from model_handler import ModelHandler
 
-SAGEMAKER_BATCH = None
-try:
-    SAGEMAKER_BATCH = os.environ['SAGEMAKER_BATCH']
-except KeyError:
-    SAGEMAKER_BATCH = False
+SAGEMAKER_BATCH = os.environ.get('SAGEMAKER_BATCH', False)
+TEST_S3_BUCKET = os.environ.get('TEST_S3_BUCKET')
+TEST_S3_IMG_PATH = os.environ.get('TEST_S3_IMG_PATH')
+TEST_LOCAL_IMG_PATH = '/tmp/test.jpg'
+# TEST_LOCAL_IMG_PATH = '../images/00001.jpg'
 
-MAX_CONCURRENT_TRANSFORMERS = 1
-BATCH_STRATEGY = 'MULTI_RECORD'
-MAX_PAYLOAD_IN_MB = 6
+# todo: make int values with int ...
+MAX_CONCURRENT_TRANSFORMERS = int(os.environ.get('MAX_CONCURRENT_TRANSFORMERS', 1))
+BATCH_STRATEGY = os.environ.get('BATCH_STRATEGY', 'MULTI_RECORD')
+MAX_PAYLOAD_IN_MB = int(os.environ.get('MAX_PAYLOAD_IN_MB', 6))
 
-TEST_IMG_PATH = '../images/00001.jpg'
 app = Flask(__name__)
 service = ModelHandler(batch_size=128, preferred_device='cuda')
 
@@ -44,34 +44,20 @@ def get_batch_inference_data(data: str):
 def ping():
     """
     Determine if the container is healthy by running a sample through the algorithm.
+    we will return status ok if sage maker have access to S3, can load the model and run predictions.
     """
-    # we will return status ok if the model can load the model and run predictions.
-    gpu_availability = torch.cuda.is_available()
-    device_name = 'not_available'
-    if gpu_availability:
-        device_name = torch.cuda.get_device_name('cuda')
-
-    gpu_info = {
-        'gpu_availability': gpu_availability,
-        'gpu_device': device_name,
-    }
-
+    gpu_info = service.get_gpu_info()
     try:
         try:
             import boto3
             s3 = boto3.client('s3')
-            s3.download_file('wb-inference-data',
-                             'vehicle-detection/real-time-inference/6994861b-202a-11eb-b185-e322df8faf29.jpg',
-                             '/tmp/test.jpg')
+            s3.download_file(TEST_S3_BUCKET, TEST_S3_IMG_PATH, TEST_LOCAL_IMG_PATH)
         except Exception as e:
-            err = {
-                'error': 'boto3',
-                'message': str(e),
-            }
+            err = {'error': 'boto3', 'message': str(e)}
             err.update(gpu_info)
             return Response(response=json.dumps(err), status=500, mimetype='application/json')
 
-        _ = service.predict_ping(TEST_IMG_PATH)
+        _ = service.predict_ping(TEST_LOCAL_IMG_PATH)
 
         success_result = {'status': 'OK'}
         success_result.update(gpu_info)

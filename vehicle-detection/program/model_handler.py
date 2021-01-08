@@ -139,3 +139,15 @@ class ModelHandler:
             return tensor.numpy()
         else:
             return tensor.cpu().numpy()
+
+    @staticmethod
+    def get_gpu_info():
+        gpu_availability = torch.cuda.is_available()
+        device_name = 'not_available'
+        if gpu_availability:
+            device_name = torch.cuda.get_device_name('cuda')
+
+        return {
+            'gpu_availability': gpu_availability,
+            'gpu_device': device_name,
+        }

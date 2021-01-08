@@ -66,25 +66,3 @@ class DataLoader:
             yield images
 
         self.remove_tmp_dir(local_dir)
-
-# testing
-# todo: write a new file: new_data_loader.py and put the class code in it
-# $ python
-
-import torch
-from new_data_loader import DataLoader
-from torchvision import transforms
-from utils.torch_utils import select_device
-
-bucket = 'wb-inference-data'
-img_paths = ["vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000001.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000002.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000003.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000004.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000005.jpg", "vehicle-detection/batch-transform-input/images/first-batch-transform/ksacarsharing/ksacarsharing_000006.jpg"]
-
-trans = transforms.ToTensor()
-device = select_device('cuda:0', 4)
-
-loader = DataLoader(bucket, trans, device)
-for batch in loader.image_generator(img_paths):
-    t = batch[0]
-    break
-
-t.device

@@ -1,0 +1,46 @@
+version: '3.9'
+
+x-empty-commands:
+  &empty-commands
+    entrypoint: [ ]
+    command: [ ]
+
+x-cuda-base:
+  &cuda_base_default_build
+#    <<: *cuda-base-env
+    image: wunder-brain/cuda-base
+    build:
+        context: .
+        dockerfile: dockerfiles/Dockerfile.cuda_base
+
+x-vehicle-detection:
+  &vehicle-detection-build
+    image: wunder-brain/vehicle-detection-gpu
+    build:
+        context: .
+        dockerfile: dockerfiles/Dockerfile.vehicle-detection-gpu
+        args:
+            ENV: "prod"
+
+services:
+    cuda-base:
+        <<: *cuda_base_default_build
+    cuda-base-versioned:
+        <<: *cuda_base_default_build
+        # todo: update version if necessary
+        image: wunder-brain/cuda-base:v1.0.0
+
+    vehicle-detection:
+        <<: *vehicle-detection-build
+        runtime: nvidia
+        ports:
+            - 8080:8080
+        depends_on:
+            - cuda-base
+        entrypoint: [ "python", "serve.py" ]
+        command: []
+    vehicle-detection-versioned:
+        <<: *vehicle-detection-build
+        <<: *empty-commands
+        # todo: update version if necessary
+        image: "wunder-brain/vehicle-detection-gpu:v1.0.0"

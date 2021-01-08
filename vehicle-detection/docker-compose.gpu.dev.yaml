@@ -1,0 +1,18 @@
+version: '3.9'
+
+services:
+    vehicle-detection:
+        image: wunder-brain/vehicle-detection-gpu:dev-latest
+        build:
+            args:
+                ENV: "dev"
+        volumes:
+            - type: bind
+              source: ./ml
+              target: /opt/ml
+            - type: bind
+              source: ./program
+              target: /opt/program
+        working_dir: /opt/program
+        # entrypoint: ["python", "/opt/program/serve.py"]
+        entrypoint: ["/bin/bash"]

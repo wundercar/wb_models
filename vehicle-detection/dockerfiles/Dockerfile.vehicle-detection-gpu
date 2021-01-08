@@ -1,4 +1,5 @@
-FROM bothmena/cuda-base
+ARG ENV
+FROM wunder-brain/cuda-base
 
 MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
 
@@ -10,24 +11,25 @@ LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
 COPY images/00001.jpg /opt/images/00001.jpg
 COPY aws/ /root/.aws
 
-RUN git clone https://github.com/ultralytics/yolov5.git
-RUN mv yolov5/ /opt/program
+ARG ENV
+
+COPY program/ /tmp/program
+RUN git clone https://github.com/ultralytics/yolov5.git /tmp/yolov5
+RUN mv /tmp/yolov5/models /opt/conda/lib/python$(python --version | tail -c 6 | head -c 3)/site-packages
+RUN mv /tmp/yolov5/utils /opt/conda/lib/python$(python --version | tail -c 6 | head -c 3)/site-packages
+
+RUN if [ "$ENV" != "dev" ] ; \
+        then \
+            mv /tmp/program /opt/program && \
+            chmod 755 /opt/program; \
+    fi
+
+# todo: delete next line
+RUN echo $ENV >> /opt/env.txt && python -c "import sys; print(sys.path)" >> /opt/env.txt
 
 RUN rm -rf /root/.cache
-
-COPY program/ /opt/program
+RUN rm -rf /tmp/yolov5
 
 ENV PATH="/opt/program:/opt/conda/bin:${PATH}"
 
-RUN chmod 755 /opt/program
 WORKDIR /opt/program
-
-# Uncomment next lines to be able to run docker locally.
-# On AWS, SageMaker will do the next steps automatically: get model artifacts from s3 and uncompress them.
-#COPY ml/model.tar.gz .
-#RUN mkdir -p /opt/ml/model
-#RUN tar -zxvf model.tar.gz -C /opt/ml/model
-#RUN rm model.tar.gz
-
-ENTRYPOINT ["python", "serve.py"]
-CMD ["serve"]

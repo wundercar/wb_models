@@ -27,9 +27,13 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN /opt/conda/bin/pip --no-cache-dir install \
         opencv-python \
         scipy \
+        seaborn \
         pandas \
         boto3 \
         matplotlib \
         flask \
         gevent \
         gunicorn
+
+ENV MODEL_SERVER_TIMEOUT=60
+ENV MAX_MODEL_SERVER_WORKERS=8

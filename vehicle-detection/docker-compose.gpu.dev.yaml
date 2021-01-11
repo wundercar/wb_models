@@ -10,9 +10,11 @@ services:
             - type: bind
               source: ./program
               target: /opt/program
+        build:
+            args:
+                ENV: "dev"
         environment:
             TEST_S3_BUCKET: 'wb-inference-data-exp'
             MAX_MODEL_SERVER_WORKERS: 2
-            ENV: "dev"
         working_dir: /opt/program
 #        entrypoint: ["/bin/bash"]

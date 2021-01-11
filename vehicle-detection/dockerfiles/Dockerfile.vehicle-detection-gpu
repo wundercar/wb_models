@@ -1,3 +1,4 @@
+ARG ENV
 FROM wunder-brain/cuda-base
 
 MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
@@ -13,6 +14,9 @@ COPY aws/ /root/.aws
 RUN git clone https://github.com/ultralytics/yolov5.git /tmp/yolov5
 RUN mv /tmp/yolov5/models /opt/conda/lib/python$(python --version | tail -c 6 | head -c 3)/site-packages
 RUN mv /tmp/yolov5/utils /opt/conda/lib/python$(python --version | tail -c 6 | head -c 3)/site-packages
+
+ARG ENV
+ENV ENV=${ENV}
 
 RUN if [ "$ENV" = "dev" ] ; \
         then \

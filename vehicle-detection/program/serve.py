@@ -8,7 +8,7 @@
 #
 # Parameter                Environment Variable              Default Value
 # ---------                --------------------              -------------
-# number of workers        MODEL_SERVER_WORKERS              the number of CPU cores
+# number of workers        MODEL_SERVER_WORKERS              min(the number of CPU cores, DEFAULT_MAX_WORKERS)
 # timeout                  MODEL_SERVER_TIMEOUT              60 seconds
 
 import multiprocessing
@@ -17,10 +17,12 @@ import signal
 import subprocess
 import sys
 
+DEFAULT_MAX_WORKERS = 999
 cpu_count = multiprocessing.cpu_count()
 
-model_server_timeout = os.environ.get('MODEL_SERVER_TIMEOUT', 60)
-max_model_server_workers = int(os.environ.get('MAX_MODEL_SERVER_WORKERS', 99999))
+develop = os.environ.get('ENV', 'prod') == 'dev'
+model_server_timeout = int(os.environ.get('MODEL_SERVER_TIMEOUT', 60))
+max_model_server_workers = int(os.environ.get('MAX_MODEL_SERVER_WORKERS', DEFAULT_MAX_WORKERS))
 default_model_server_workers = min(cpu_count, max_model_server_workers)
 model_server_workers = int(os.environ.get('MODEL_SERVER_WORKERS', default_model_server_workers))
 
@@ -46,12 +48,14 @@ def start_server():
     subprocess.check_call(['ln', '-sf', '/dev/stderr', '/var/log/nginx/error.log'])
 
     nginx = subprocess.Popen(['nginx', '-c', '/opt/program/nginx.conf'])
+    reload_arg = ['--reload'] if develop else []
     gunicorn = subprocess.Popen(['gunicorn',
                                  '--timeout', str(model_server_timeout),
                                  '-k', 'gevent',
                                  '-b', 'unix:/tmp/gunicorn.sock',
-                                 '-w', str(model_server_workers),
-                                 'wsgi:app'])
+                                 '-w', str(model_server_workers)] +
+                                reload_arg +
+                                ['wsgi:app'])
 
     signal.signal(signal.SIGTERM, lambda a, b: sigterm_handler(nginx.pid, gunicorn.pid))
 
@@ -67,6 +71,5 @@ def start_server():
 
 
 # The main routine just invokes the start function.
-
 if __name__ == '__main__':
     start_server()

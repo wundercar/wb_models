@@ -7,7 +7,6 @@ x-empty-commands:
 
 x-cuda-base:
   &cuda_base_default_build
-#    <<: *cuda-base-env
     image: wunder-brain/cuda-base
     build:
         context: .
@@ -19,8 +18,15 @@ x-vehicle-detection:
     build:
         context: .
         dockerfile: dockerfiles/Dockerfile.vehicle-detection-gpu
-        args:
-            ENV: "prod"
+    environment:
+        TEST_S3_BUCKET: 'wb-inference-data-exp'
+        TEST_S3_IMG_PATH: '/vehicle-detection/ping-test-images/image_01.jpg'
+        MODEL_SERVER_TIMEOUT: 60
+        MAX_MODEL_SERVER_WORKERS: 8
+        MAX_CONCURRENT_TRANSFORMERS: 1
+        BATCH_STRATEGY: 'MULTI_RECORD'
+        MAX_PAYLOAD_IN_MB: 6
+        ENV: 'prod'
 
 services:
     cuda-base:
@@ -38,7 +44,7 @@ services:
         depends_on:
             - cuda-base
         entrypoint: [ "python", "serve.py" ]
-        command: []
+        command: [ ]
     vehicle-detection-versioned:
         <<: *vehicle-detection-build
         <<: *empty-commands

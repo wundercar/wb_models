@@ -1,4 +1,3 @@
-ARG ENV
 FROM wunder-brain/cuda-base
 
 MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
@@ -8,24 +7,22 @@ MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
 # Set a docker label to enable container to use SAGEMAKER_BIND_TO_PORT environment variable if present
 LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
 
-COPY images/00001.jpg /opt/images/00001.jpg
+COPY program/ /tmp/program
 COPY aws/ /root/.aws
 
-ARG ENV
-
-COPY program/ /tmp/program
 RUN git clone https://github.com/ultralytics/yolov5.git /tmp/yolov5
 RUN mv /tmp/yolov5/models /opt/conda/lib/python$(python --version | tail -c 6 | head -c 3)/site-packages
 RUN mv /tmp/yolov5/utils /opt/conda/lib/python$(python --version | tail -c 6 | head -c 3)/site-packages
 
-RUN if [ "$ENV" != "dev" ] ; \
+RUN if [ "$ENV" = "dev" ] ; \
         then \
+            mv /root/.aws/credentials-dev /root/.aws/credentials; \
+    elif [ "$ENV" = "prod" ] ; \
+        then \
+            rm /root/.aws/credentials-dev && \
             mv /tmp/program /opt/program && \
             chmod 755 /opt/program; \
     fi
-
-# todo: delete next line
-RUN echo $ENV >> /opt/env.txt && python -c "import sys; print(sys.path)" >> /opt/env.txt
 
 RUN rm -rf /root/.cache
 RUN rm -rf /tmp/yolov5
@@ -33,3 +30,5 @@ RUN rm -rf /tmp/yolov5
 ENV PATH="/opt/program:/opt/conda/bin:${PATH}"
 
 WORKDIR /opt/program
+ENTRYPOINT ["python", "serve.py"]
+CMD ["serve"]

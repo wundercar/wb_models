@@ -18,18 +18,17 @@ RUN mv /tmp/yolov5/utils /opt/conda/lib/python$(python --version | tail -c 6 | h
 ARG ENV
 ENV ENV=${ENV}
 
-RUN if [ "$ENV" = "dev" ] ; \
+RUN mv /root/.aws/credentials-$ENV /root/.aws/credentials && \
+    rm /root/.aws/credentials-*
+
+RUN if [ "$ENV" = "prod" ] || [ "$ENV" = "test" ] ; \
         then \
-            mv /root/.aws/credentials-dev /root/.aws/credentials; \
-    elif [ "$ENV" = "prod" ] ; \
-        then \
-            rm /root/.aws/credentials-dev && \
             mv /tmp/program /opt/program && \
             chmod 755 /opt/program; \
     fi
 
-RUN rm -rf /root/.cache
-RUN rm -rf /tmp/yolov5
+RUN rm -rf /root/.cache && \
+    rm -rf /tmp/yolov5
 
 ENV PATH="/opt/program:/opt/conda/bin:${PATH}"
 

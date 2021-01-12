@@ -20,7 +20,9 @@ x-cuda-base:
 
 x-vehicle-detection:
   &vehicle-detection-build
+    <<: *no-replicas
     image: wunder-brain/vehicle-detection-gpu
+    container_name: vehicle_detection_gpu
     build:
         context: .
         dockerfile: dockerfiles/Dockerfile.vehicle-detection-gpu
@@ -51,10 +53,10 @@ services:
         ports:
             - 8080:8080
         entrypoint: [ "python", "serve.py" ]
-        command: [ ]
+        command: [ "serve" ]
     vehicle-detection-versioned:
         <<: *vehicle-detection-build
         <<: *empty-commands
-        <<: *no-replicas
         # todo: update version if necessary
         image: "wunder-brain/vehicle-detection-gpu:v1.0.0"
+        container_name: vehicle_detection_gpu_versioned

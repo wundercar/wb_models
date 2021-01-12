@@ -1,7 +1,7 @@
 import os
 import json
 import torch
-from typing import List, Dict
+from typing import List, Dict, Union
 from PIL import Image
 from enum import Enum
 from time import sleep
@@ -53,23 +53,28 @@ class ModelHandler:
 
         return self._model
 
-    def text_output_handler(self, img_path: str, detections: Detections, out: str, *args):
+    def text_output_handler(self, img_path: str, detections: Detections, out: str, *args) -> str:
         return out + '{},{}\n'.format(img_path, str(self.to_list_unless_none(detections.xyxy)))
 
-    def json_output_handler(self, img_path: str, detections: Detections, out: dict, is_final: bool):
+    def json_output_handler(self, img_path: str, detections: Detections, out: dict, is_final: bool) -> Union[str, dict]:
         out.update({img_path: self.to_list_unless_none(detections.xyxy)})
         return json.dumps(out) if is_final else out.copy()
 
     def post_process(self, images_paths: List[str], detections: List[Detections], output_format: OutputFormat):
         length = len(images_paths)
+        output_handler = None
         assert length == len(detections)
-        output_handler, output = (self.json_output_handler, {}) if output_format == OutputFormat.JSON else (
-        self.text_output_handler, '')
+        if output_format == OutputFormat.JSON:
+            output_handler, output, mimetype = self.json_output_handler, {}, 'application/json'
+        elif output_format == OutputFormat.TEXT:
+            output_format, output, mimetype = self.text_output_handler, '', 'text/plain'
+        else:
+            raise ValueError('Output format not supported')
 
         for index, (img_path, img_detections) in enumerate(zip(images_paths, detections)):
             output = output_handler(img_path, img_detections, output, index == length - 1)
 
-        return output
+        return output, mimetype
 
     def get_device_if_ready(self, time_step: int = 1, timeout: int = 30):
         waiting_time = 0

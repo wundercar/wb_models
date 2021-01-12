@@ -37,10 +37,12 @@ For both environments, each image will be built twice one time with the tag *lat
 
 ### Running the containers (Image with *latest* tag):
 
-- "dev": If you already built `wunder-brain/cuda-base` & `wunder-brain/vehicle-detection-gpu:dev-latest` you can 
-  start the container using this command:
+- "dev":
   
 ```
+# recommended command:
+docker-compose -f docker-compose.gpu.yaml -f docker-compose.gpu.dev.yaml up
+# Or...
 docker-compose -f docker-compose.gpu.yaml -f docker-compose.gpu.dev.yaml run --service-ports vehicle-detection
 ```
 

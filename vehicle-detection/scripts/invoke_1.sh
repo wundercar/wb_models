@@ -2,7 +2,7 @@
 
 res1=$(date +%s.%N)
 
-curl --location --request POST 'localhost:8080/invocations' --header 'Content-Type: application/json' --data-raw '{"bucket": "wb-inference-data","images": ["vehicle-detection/ping-test-images/image_01.jpg"]}'
+curl --location --request POST 'localhost:8080/invocations' --header 'Content-Type: application/json' --data-raw '{"bucket": "wb-inference-data-exp","images": ["vehicle-detection/ping-test-images/image_01.jpg"]}'
 
 res2=$(date +%s.%N)
 

@@ -9,6 +9,7 @@ from time import sleep
 from utils.torch_utils import select_device
 from models.experimental import attempt_load
 from data_loader import DataLoader
+from models.yolo import Detections
 
 
 class OutputFormat(Enum):
@@ -52,18 +53,23 @@ class ModelHandler:
 
         return self._model
 
-    @staticmethod
-    def post_process(images_paths: List[str], predictions: list, output_format: OutputFormat):
-        img_pred_dict = dict(zip(images_paths, predictions))
-        if output_format == OutputFormat.JSON:
-            return json.dumps(img_pred_dict), 'application/json'
-        elif output_format == OutputFormat.TEXT:
-            text = ''
-            for image, predictions in img_pred_dict.items():
-                text += '{},{}\n'.format(image, str(predictions))
-            return text[:-2], 'text/plain'
-        else:
-            return None, None
+    def text_output_handler(self, img_path: str, detections: Detections, out: str, *args):
+        return out + '{},{}\n'.format(img_path, str(self.to_list_unless_none(detections.xyxy)))
+
+    def json_output_handler(self, img_path: str, detections: Detections, out: dict, is_final: bool):
+        out.update({img_path: self.to_list_unless_none(detections.xyxy)})
+        return json.dumps(out) if is_final else out.copy()
+
+    def post_process(self, images_paths: List[str], detections: List[Detections], output_format: OutputFormat):
+        length = len(images_paths)
+        assert length == len(detections)
+        output_handler, output = (self.json_output_handler, {}) if output_format == OutputFormat.JSON else (
+        self.text_output_handler, '')
+
+        for index, (img_path, img_detections) in enumerate(zip(images_paths, detections)):
+            output = output_handler(img_path, img_detections, output, index == length - 1)
+
+        return output
 
     def get_device_if_ready(self, time_step: int = 1, timeout: int = 30):
         waiting_time = 0
@@ -76,19 +82,18 @@ class ModelHandler:
 
         return select_device(self.preferred_device, batch_size=self.batch_size)
 
-    def predict(self, batch: list):
+    def predict(self, batch: list) -> List[Detections]:
         """
         run the model on a data batch and return predictions.
         :param batch: List of PIL.Image objects
         :return: Tensor (predictions)
         """
-        return self.model(batch, self.images_size)
+        return self.model(batch, self.images_size).tolist()
 
     def prediction_iterator(self, dataloader: DataLoader, images_paths: List[str]):
         result = []
         for batch in dataloader.image_generator(images_paths, self.batch_size):
-            output = self.predict(batch)
-            result += [self.to_list_unless_none(t) for t in output]
+            result += self.predict(batch)
             torch.cuda.empty_cache()
 
         return result
@@ -123,7 +128,6 @@ class ModelHandler:
         """
         batch = [Image.open(image_path)]
         output = self.predict(batch)
-        output = [self.to_list_unless_none(t) for t in output]
 
         return self.post_process([image_path], output, OutputFormat.JSON)
 

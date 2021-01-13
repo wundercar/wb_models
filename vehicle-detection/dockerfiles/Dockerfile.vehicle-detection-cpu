@@ -46,7 +46,8 @@ RUN pip3 --no-cache-dir install \
         tqdm \
         gunicorn
 
-COPY images/00001.jpg /opt/images/00001.jpg
+# todo: use env variable to download images from S3 instead.
+#COPY images/00001.jpg /opt/images/00001.jpg
 COPY aws/ /root/.aws
 
 RUN git clone https://github.com/ultralytics/yolov5.git

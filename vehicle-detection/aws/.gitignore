@@ -1,5 +1,4 @@
 # Created by .ignore support plugin (hsz.mobi)
-config
 credentials-dev
 credentials-prod
-credentials-test
+credentials-staging

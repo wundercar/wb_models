@@ -12,7 +12,10 @@ I am using two separate environments:
     - We are using production AWS profile
     - The trained model weights are hosted in S3, will be imported automatically by **SageMaker**
     - The folder `program` will be copied to `/opt/program`
-    
+- "staging": staging env, in this env:
+    - Every thing is similar to "prod" env except that we are using `fleetbird-experimental` AWS profile.
+    - This env is intended to test the docker images on AWS, `fleetbird-experimental` profile before deploying to prod.
+
 ### Building the images:
 
 - "dev":
@@ -25,6 +28,18 @@ If you already built `wunder-brain/cuda-base` you can use the following command 
 vehicle-detection image:
 ```
 docker-compose -f docker-compose.gpu.yaml -f docker-compose.gpu.dev.yaml build vehicle-detection
+```
+
+- "staging":
+
+```
+docker-compose -f docker-compose.gpu.yaml -f docker-compose.gpu.staging.yaml build
+```
+
+If you already built `wunder-brain/cuda-base` you can use the following command to build only the
+vehicle-detection image:
+```
+docker-compose -f docker-compose.gpu.yaml -f docker-compose.gpu.staging.yaml build vehicle-detection
 ```
 
 - "prod":

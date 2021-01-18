@@ -21,7 +21,7 @@ ENV ENV=${ENV}
 RUN mv /root/.aws/credentials-$ENV /root/.aws/credentials && \
     rm /root/.aws/credentials-*
 
-RUN if [ "$ENV" = "prod" ] || [ "$ENV" = "test" ] ; \
+RUN if [ "$ENV" = "prod" ] || [ "$ENV" = "staging" ] ; \
         then \
             mv /tmp/program /opt/program && \
             chmod 755 /opt/program; \

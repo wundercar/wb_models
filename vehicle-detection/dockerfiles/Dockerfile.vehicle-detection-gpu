@@ -4,11 +4,12 @@ FROM wunder-brain/cuda-base
 MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
 
 # Set a docker label to advertise multi-model support on the container
-# LABEL com.amazonaws.sagemaker.capabilities.multi-models=true
+# LABEL com.amazonaws.sagemaker.capabilities.multi-data=true
 # Set a docker label to enable container to use SAGEMAKER_BIND_TO_PORT environment variable if present
 LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
 
 COPY program/ /tmp/program
+COPY dev/ /tmp/dev
 COPY aws/ /root/.aws
 
 RUN git clone https://github.com/ultralytics/yolov5.git /tmp/yolov5
@@ -24,6 +25,9 @@ RUN mv /root/.aws/credentials-$ENV /root/.aws/credentials && \
 RUN if [ "$ENV" = "prod" ] || [ "$ENV" = "staging" ] ; \
         then \
             mv /tmp/program /opt/program && \
+            rm -rf /tmp/dev && \
+            rm -rf /opt/program/data && \
+            rm /opt/program/detect.py /opt/program/test.py /opt/program/train.py && \
             chmod 755 /opt/program; \
     fi
 

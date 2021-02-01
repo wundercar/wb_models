@@ -1,0 +1,62 @@
+version: '3.9'
+
+x-no-replicas:
+    &no-replicas
+    deploy:
+        replicas: 0
+
+x-empty-commands:
+  &empty-commands
+    entrypoint: [ ]
+    command: [ ]
+
+x-cuda-base:
+  &cuda_base_default_build
+    <<: *no-replicas
+    image: wunder-brain/cuda-base
+    build:
+        context: .
+        dockerfile: dockerfiles/Dockerfile.cuda_base
+
+x-vehicle-detection:
+  &vehicle-detection-build
+    <<: *no-replicas
+    image: wunder-brain/vehicle-detection-gpu
+    container_name: vehicle_detection_gpu
+    build:
+        context: .
+        dockerfile: dockerfiles/Dockerfile.vehicle-detection-gpu
+        args:
+            ENV: "prod"
+    depends_on:
+        - cuda-base
+    environment:
+        TEST_S3_BUCKET: 'wb-inference-data-exp'
+        TEST_S3_IMG_PATH: 'vehicle-detection/ping-test-images/image_01.jpg'
+        MODEL_SERVER_TIMEOUT: 60
+        MAX_MODEL_SERVER_WORKERS: 8
+        MAX_CONCURRENT_TRANSFORMERS: 1
+        BATCH_STRATEGY: 'MULTI_RECORD'
+        MAX_PAYLOAD_IN_MB: 6
+
+services:
+    cuda-base:
+        <<: *cuda_base_default_build
+    cuda-base-versioned:
+        <<: *cuda_base_default_build
+        # todo: update version if necessary
+        image: wunder-brain/cuda-base:v1.0.0
+
+    vehicle-detection:
+        <<: *vehicle-detection-build
+        runtime: nvidia
+        ports:
+            - 8080:8080
+        entrypoint: [ "python", "serve.py" ]
+        command: [ "serve" ]
+    vehicle-detection-versioned:
+        <<: *vehicle-detection-build
+        <<: *empty-commands
+        # todo: update version if necessary
+        image: "wunder-brain/vehicle-detection-gpu:v1.0.0"
+        container_name: vehicle_detection_gpu_versioned

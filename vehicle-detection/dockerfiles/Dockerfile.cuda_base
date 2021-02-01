@@ -1,0 +1,36 @@
+FROM pytorch/pytorch:1.7.0-cuda11.0-cudnn8-runtime
+
+MAINTAINER Aymen Ben Othmen <aymenbenothmenabo@gmail.com>
+
+# Install necessary dependencies for MMS and SageMaker Inference Toolkit
+RUN apt-get update
+RUN apt-get -y install --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    openjdk-8-jdk-headless \
+    curl \
+    vim \
+    mpich \
+    nginx \
+    wget \
+    bzip2 \
+    libxext6 \
+    libsm6 \
+    python3-dev \
+    libkrb5-dev \
+    libxrender1
+
+# installing git in the previous command (with other packages) fails.
+RUN apt-get -y install git libgl1-mesa-glx libglib2.0-0
+RUN rm -rf /var/lib/apt/lists/*
+
+RUN /opt/conda/bin/pip --no-cache-dir install \
+        opencv-python \
+        scipy \
+        seaborn \
+        pandas \
+        boto3 \
+        matplotlib \
+        flask \
+        gevent \
+        gunicorn

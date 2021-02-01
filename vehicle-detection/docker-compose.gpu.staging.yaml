@@ -1,0 +1,13 @@
+version: '3.9'
+
+# staging environment is very similar to prod and intended to be deployed to AWS fleetbird-experimental.
+services:
+    vehicle-detection:
+        image: wunder-brain/vehicle-detection-gpu:staging-latest
+        container_name: vehicle_detection_gpu_staging
+        build:
+            args:
+                ENV: "staging"
+        environment:
+            TEST_S3_BUCKET: 'wb-inference-data-exp'
+            MAX_MODEL_SERVER_WORKERS: 32

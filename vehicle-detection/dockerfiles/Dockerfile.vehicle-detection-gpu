@@ -1,0 +1,37 @@
+ARG ENV
+FROM wunder-brain/cuda-base
+
+MAINTAINER Aymen Ben Othmen <aymen.othmen@wundermobility.com>
+
+# Set a docker label to advertise multi-model support on the container
+# LABEL com.amazonaws.sagemaker.capabilities.multi-models=true
+# Set a docker label to enable container to use SAGEMAKER_BIND_TO_PORT environment variable if present
+LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
+
+COPY program/ /tmp/program
+COPY aws/ /root/.aws
+
+RUN git clone https://github.com/ultralytics/yolov5.git /tmp/yolov5
+RUN mv /tmp/yolov5/models /opt/conda/lib/python$(python --version | tail -c 6 | head -c 3)/site-packages
+RUN mv /tmp/yolov5/utils /opt/conda/lib/python$(python --version | tail -c 6 | head -c 3)/site-packages
+
+ARG ENV
+ENV ENV=${ENV}
+
+RUN mv /root/.aws/credentials-$ENV /root/.aws/credentials && \
+    rm /root/.aws/credentials-*
+
+RUN if [ "$ENV" = "prod" ] || [ "$ENV" = "staging" ] ; \
+        then \
+            mv /tmp/program /opt/program && \
+            chmod 755 /opt/program; \
+    fi
+
+RUN rm -rf /root/.cache && \
+    rm -rf /tmp/yolov5
+
+ENV PATH="/opt/program:/opt/conda/bin:${PATH}"
+
+WORKDIR /opt/program
+ENTRYPOINT ["python", "serve.py"]
+CMD ["serve"]

@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+    vehicle-detection:
+        image: wunder-brain/vehicle-detection-gpu:dev-latest
+        container_name: vehicle_detection_gpu_dev
+        volumes:
+            - type: bind
+              source: ./ml
+              target: /opt/ml
+            - type: bind
+              source: ./program
+              target: /opt/program
+        build:
+            args:
+                ENV: "dev"
+        deploy:
+            replicas: 1
+        environment:
+            TEST_S3_BUCKET: 'wb-inference-data-exp'
+            MAX_MODEL_SERVER_WORKERS: 2
+        working_dir: /opt/program
+#        entrypoint: ["/bin/bash"]
+        command: [ ]

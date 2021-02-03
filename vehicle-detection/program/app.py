@@ -79,8 +79,6 @@ def ping():
     Determine if the container is healthy by running a sample through the algorithm.
     we will return status ok if sage maker have access to S3, can load the model and run predictions.
     """
-    print('temporary log / DEBUG_MODE', os.environ.get('DEBUG_MODE'), DEBUG_MODE, flush=True)
-    print('temporary log / env', json.dumps(get_env_vars()), flush=True)
     gpu_info = get_gpu_info()
     print(json.dumps(gpu_info), flush=DEBUG_MODE)
     print(json.dumps(get_env_vars()), flush=DEBUG_MODE)

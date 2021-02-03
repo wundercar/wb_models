@@ -1,0 +1,35 @@
+FROM 763104351884.dkr.ecr.eu-central-1.amazonaws.com/pytorch-inference:1.6.0-gpu-py36-cu101-ubuntu16.04
+
+MAINTAINER Aymen Ben Othmen <aymenbenothmenabo@gmail.com>
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+# Install necessary dependencies for MMS and SageMaker Inference Toolkit
+RUN apt-get update
+RUN apt-get -y install --no-install-recommends \
+    build-essential \
+    nginx;
+RUN rm -rf /var/lib/apt/lists/*
+
+
+RUN /opt/conda/bin/conda update conda
+RUN /opt/conda/bin/conda install --revision 0
+RUN /opt/conda/bin/conda clean --all
+RUN /opt/conda/bin/conda install -c pytorch \
+        pytorch \
+        torchvision \
+        torchaudio \
+        pyyaml \
+        cudatoolkit=10.1
+
+RUN /opt/conda/bin/pip --no-cache-dir install \
+        opencv-python \
+        scipy \
+        pandas \
+        seaborn \
+        botocore \
+        boto3 \
+        matplotlib \
+        flask \
+        gevent \
+        gunicorn

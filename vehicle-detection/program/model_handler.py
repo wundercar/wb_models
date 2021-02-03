@@ -36,7 +36,7 @@ class ModelHandler:
         self.saved_model_path = saved_model_path
         self.preferred_device = preferred_device
         self._model = None
-        self._device = None  # select_device(self.preferred_device, batch_size=self.batch_size)
+        self._device = None
 
     @property
     def device(self):
@@ -148,15 +148,3 @@ class ModelHandler:
             return tensor.numpy()
         else:
             return tensor.cpu().numpy()
-
-    @staticmethod
-    def get_gpu_info():
-        gpu_availability = torch.cuda.is_available()
-        device_name = 'not_available'
-        if gpu_availability:
-            device_name = torch.cuda.get_device_name('cuda')
-
-        return {
-            'gpu_availability': gpu_availability,
-            'gpu_device': device_name,
-        }

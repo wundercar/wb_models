@@ -8,6 +8,6 @@ services:
         build:
             args:
                 ENV: "staging"
-        environment:
-            TEST_S3_BUCKET: 'wb-inference-data-exp'
-            MAX_MODEL_SERVER_WORKERS: 32
+                TEST_S3_BUCKET: 'wb-inference-data-exp'
+                MAX_MODEL_SERVER_WORKERS: 32
+                DEBUG_MODE: 'True'
